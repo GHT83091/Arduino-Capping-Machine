@@ -3,8 +3,11 @@ int CcPin = 5;          // Capping station sensor Pin
 int CapPin = 6;         // Cap Sensor Pin
 int HeadDwPin = 7;      // Cap Screwing Head Up, Pneumatic Forward Pin
 int HeadUpPin =8;       // Pneumatic Reverse Pin
-int MotorPin = 10;      // Stepping Motor drive Pin  
-int CapAlarm = 11;      // No cap Alarm Pin
+int MotorPin = 10;      // Main Stepping Motor drive Pin  
+int CapMotorPin = 11;  // Cap Insert Stepping Motor
+int DirPin = 12;        // Direction Pin to set the motor direction , clockwise or anti-clockwise
+int CapAlarm = 13;      // No cap Alarm Pin
+int DirPin2 = 14;       // Cap Insert Motor Direction control  
 int Cap = 0;
 int Cc = 0;
 int Ci = 0;
@@ -20,35 +23,36 @@ pinMode(8, OUTPUT);
 pinMode(9, OUTPUT);
 pinMode(10, OUTPUT);
 pinMode(11, OUTPUT);
+pinMode(12, OUTPUT);
+pinMode(13, OUTPUT);
+pinMode(14, OUTPUT);
  
 }
 
 void loop() {
   Cap = digitalRead(CapPin);
-  if (Cap == HIGH)                        // Cap detector HIGH = Capready, LOW = No Cap.
+  if (Cap == HIGH)                          // Cap detector HIGH = Capready, LOW = No Cap.
   {
-    for (int i = 0; i <= 400; i++)       // Motor Move 90 degrees
+    digitalWrite(DirPin, HIGH);             // Set motor move clockwise
+    for (int i = 0; i <= 20000; i++)        // Main Motor Move 100 turns
       {
-        digitalWrite(MotorPin, LOW);     // Pule generation 50% dutycycle 20 Milisec. Pulse Repletiontion time 
+        for (int n = 0; n <= 200; n++)      // Cap Insert: Cap Insert Motor move 1 turn
+          {
+          digitalWrite(DirPin2, HIGH);      // Set Cap Insert motor move clockwise
+          digitalWrite(CapMotorPin, LOW);   // Pulse generator for Cap Insert Motor
+          delay(10);
+          digitalWrite(CapMotorPin, HIGH);
+          }
+        digitalWrite(MotorPin, LOW);        // Pule generator: 50% dutycycle 20 Milisec. Pulse Repletiontion time 
         delay(10);
         digitalWrite(MotorPin, HIGH);
-        delay(10); 
-      }
-    if (digitalRead(CcPin) == HIGH)                       // Container in the capping position.
-      {
-        int A;
-        A = CappingFunction();              // Call Capping Function
-      }
-    else 
-      {
-        for (int i = 0; i <= 50; i++)       // Motor Move 90 degrees
-          {
-          digitalWrite(MotorPin, LOW);     // Pule generation 50% dutycycle 20 Milisec. Pulse Repletiontion time 
-          delay(10);
-          digitalWrite(MotorPin, HIGH);
-          delay(10); 
-          }
-      }
+        delay(10);
+          if (digitalRead(CcPin) == HIGH)   // Container in the capping position.
+              {
+                int A;
+                A = CappingFunction();      // Call Capping Function
+              } 
+      }  
   }
   else {
         Serial.println(" No Cap!!!");
